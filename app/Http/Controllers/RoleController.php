@@ -43,10 +43,10 @@ class RoleController extends Controller
         $validator = $request->validate([
             'name' => 'required|string',
             'email' => 'required|email',
-            'password' => 'required|string',
+            'password' => 'required',
             'role' => 'required|string',
         ]);
-        $hash_password = Hash::make('password');
+        $hash_password = Hash::make($request->password);
         $validator['password'] = $hash_password;
         Role::create($validator);
 
@@ -93,7 +93,6 @@ class RoleController extends Controller
         $validator = $request->validate([
             'name' => 'required|string',
             'email' => 'required|email',
-
             'role' => 'required|string',
         ]);
 
