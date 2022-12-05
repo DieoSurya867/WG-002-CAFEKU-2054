@@ -34,7 +34,21 @@ class DashboardController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $pesanan = explode(',', $request->pesanan);
+        $status = $request->status;
+        $jumlahPesanan = count($pesanan);
+        $totalPesanan = $jumlahPesanan * 50000;
+        $pesan = new Pembayaran($status, $totalPesanan);
+        $bayar = $pesan->bayar();
+        $data = [
+            'namaOrang' => $request->namaOrang,
+            'jumlahPesanan' => $jumlahPesanan,
+            'totalPesanan' => $totalPesanan,
+            'status' => $status,
+            'diskon' => $pesan->diskon($status, $totalPesanan),
+            'totalPembayaran' => $bayar
+        ];
+        return view('pages.admin.dashboard', compact('data'));
     }
 
     /**
@@ -80,5 +94,43 @@ class DashboardController extends Controller
     public function destroy($id)
     {
         //
+    }
+}
+
+interface Pesan
+{
+    public function diskon();
+}
+
+abstract class parentOrder implements Pesan
+{
+    public $status;
+    public $totalPesanan;
+
+    public function __construct($status, $totalPesanan)
+    {
+        $this->status = $status;
+        $this->totalPesanan = $totalPesanan;
+    }
+
+    public function diskon()
+    {
+        if ($this->status == 'member' && $this->totalPesanan < 100000) {
+            return $this->totalPesanan * (10 / 100);
+        } elseif ($this->status == 'member' && $this->totalPesanan >= 100000) {
+            return $this->totalPesanan * (20 / 100);
+        } else {
+            return $this->totalPesanan * (0 / 100);
+        }
+    }
+
+    abstract public function bayar(): string;
+}
+
+class Pembayaran extends parentOrder
+{
+    public function bayar(): string
+    {
+        return (int)$this->totalPesanan - (int)$this->diskon($this->status, $this->totalPesanan);
     }
 }
